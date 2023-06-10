@@ -34,7 +34,7 @@ if not config.parent.exists():
     sys.exit(1)
 # config = '..' + os.path.sep + 'www'+os.path.sep+'DB' + os.path.sep + 'webserver.sqlite'
 if os.getenv("DEBUG"):
-    print("database file: " + config)
+    print(f"Database file: {config}")
 try :
     conn = sqlite3.connect(config.resolve())
     c = conn.cursor()
