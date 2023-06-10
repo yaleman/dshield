@@ -1,6 +1,7 @@
+---
 name: Convert isc-agent's Poetry file to requirements.txt
 
-on:
+"on":
   push:
     branches:
       - main
