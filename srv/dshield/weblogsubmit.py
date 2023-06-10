@@ -62,6 +62,10 @@ except sqlite3.Error as error:
     print(f"Error pulling submissions from db at {config}: {error}")
     os.remove(pidfile)
     sys.exit(1)
+except Exception as error:
+    print(f"Error pulling submissions from db at {config}: {error}")
+    os.remove(pidfile)
+    sys.exit(1)
 
 starttime=0
 
@@ -73,6 +77,10 @@ try:
         [starttime],
         ).fetchall()
 except sqlite3.Error as error:
+    print(f"Error pulling requests from db at {config}: {error}")
+    os.remove(pidfile)
+    sys.exit(1)
+except Exception as error:
     print(f"Error pulling requests from db at {config}: {error}")
     os.remove(pidfile)
     sys.exit(1)
@@ -103,6 +111,8 @@ for r in rsx:
 if starttime == lasttime:
     conn.close()
     os.remove(pidfile)
+    if os.getenv("DEBUG"):
+        print("Nothing to submit, quitting.")
     sys.exit(1)
 try:
     c.execute("INSERT INTO submissions (timestamp,linessent) VALUES (?,?)",(lasttime,linecount))
