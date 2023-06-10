@@ -566,7 +566,7 @@ if [ "$FAST" == "0" ]; then
   dlog "making sure default password was changed"
 
   if [ "$ID" == "opensuse" ]; then
-    if "$progdir/passwordtest-opensuse.pl" | grep -q 1; then
+    if "${progdir}/passwordtest-opensuse.pl" | grep -q 1; then
       outlog "You have not yet changed the default password for the 'root' user"
       outlog "Change it NOW ..."
       exit 9
@@ -577,7 +577,7 @@ if [ "$FAST" == "0" ]; then
     dlog "repair any package issues just in case"
     run 'dpkg --configure -a'
     dlog "we are on pi and should check if password for user pi has been changed"
-    if $progdir/passwordtest.pl | grep -q 1; then
+    if "${progdir}/passwordtest.pl" | grep -q 1; then
       outlog "You have not yet changed the default password for the 'pi' user"
       outlog "Change it NOW ..."
       exit 9
