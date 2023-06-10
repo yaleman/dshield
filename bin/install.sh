@@ -754,7 +754,9 @@ if [ -x /etc/init.d/cowrie ]; then
   outlog "... OK."
 fi
 # in case systemd is used
-systemctl stop cowrie
+if [ "$(systemctl | grep -c cowrie)" -ne 0 ]; then
+  systemctl stop cowrie
+fi
 
 if [ "$FAST" == "0" ]; then
 
