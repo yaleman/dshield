@@ -837,7 +837,10 @@ options ipv6 disable_ipv6=1
 blacklist ipv6
 EOF
   run "chmod 644 /etc/modprobe.d/ipv6.conf"
-  drun "cat /etc/modprobe.d/ipv6.conf.bak"
+  if [ -f "/etc/modprobe.d/ipv6.conf.bak" ]; then
+    drun "cat /etc/modprobe.d/ipv6.conf.bak"
+  fi
+
   drun "cat /etc/modprobe.d/ipv6.conf"
 else # in openSUSE
   run "grep -q 'ipv6.conf' /etc/sysctl.d/70-yast.conf"
