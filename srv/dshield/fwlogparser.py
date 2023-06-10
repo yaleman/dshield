@@ -134,9 +134,9 @@ pidfile = piddir+"fwparser.pid"
 lastcount = lastdir+"lastfwlog"
 skipvalue = lastdir+"skipvalue"
     
-if os.path.isfile(logfile) is None:
+if not os.path.exists(logfile) or os.path.isfile(logfile) is in [False, None]:
     sys.exit('Can not find logfile %s ' % logfile)
-if os.path.isfile(pidfile):
+if os.path.exists(pidfile) and os.path.isfile(pidfile):
     checklock(pidfile)
 
 # creating lock file
@@ -144,7 +144,7 @@ f = open(pidfile, 'w')
 f.write(str(os.getpid()))
 f.close()
 
-if os.path.isfile(lastcount):
+if os.path.exists(lastcount) and os.path.isfile(lastcount):
     f = open(lastcount, 'r')
     try: 
         startdate = float(f.readline())
