@@ -8,8 +8,6 @@ from pathlib import Path
 import sys
 import sqlite3
 from DShield import DshieldSubmit
-# from datetime import datetime
-# import json
 
 # We need to collect the local IP to scrub it from any logs being submitted for anonymity, and to reduce noise/dirty data.
 
@@ -28,7 +26,7 @@ f = open(pidfile, 'w')
 f.write(str(os.getpid()))
 f.close()
 
-config = Path(os.path.join("..", "www", "DB", "webserver.sqlite"))
+config = Path(os.path.join("..", "www", "DB", "webserver.sqlite")).resolve()
 if not config.parent.exists():
     print(f"Failed to find DB dir: {config.parent}")
     sys.exit(1)
@@ -36,7 +34,7 @@ if not config.parent.exists():
 if os.getenv("DEBUG"):
     print(f"Database file: {config}")
 try :
-    conn = sqlite3.connect(config.resolve())
+    conn = sqlite3.connect(config)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS submissions
             (
@@ -59,8 +57,8 @@ try :
             ''')
 
     maxid = c.execute("""SELECT max(timestamp) from submissions""").fetchone()
-except sqlite3.Error as e:
-    print("Error using db at %s - %s" % (config, e))
+except sqlite3.Error as error:
+    print(f"Error pulling submissions from db at {config}: {error}")
     os.remove(pidfile)
     sys.exit(1)
 
@@ -68,7 +66,16 @@ starttime=0
 
 if str(maxid[0]) != "None" :
     starttime=float(maxid[0])
-rsx=c.execute("""SELECT date, headers, address, cmd, path, useragent, targetip from requests where date>?""",[starttime]).fetchall()
+try:
+    rsx=c.execute(
+        """SELECT date, headers, address, cmd, path, useragent, targetip from requests where date>?""",
+        [starttime],
+        ).fetchall()
+except sqlite3.Error as error:
+    print(f"Error pulling requests from db at {config}: {error}")
+    os.remove(pidfile)
+    sys.exit(1)
+
 logs = []
 lasttime = starttime
 linecount = 0
@@ -100,17 +107,22 @@ try:
     c.execute("INSERT INTO submissions (timestamp,linessent) VALUES (?,?)",(lasttime,linecount))
     conn.commit()
     conn.close()
-except sqlite3.Error as e:
-    print("Error %s:" % e.args[0])
+except sqlite3.Error as error:
+    print(f"Error storing submissions into db at {config}: {error}")
     os.remove(pidfile)
     sys.exit(1)
 
-l = {'type': 'webhoneypot', 'logs': logs} # Changed type from 404report to reflect addition of new header data
+# Changed type from 404report to reflect addition of new header data
+l = {'type': 'webhoneypot', 'logs': logs}
 d.post(l)
 os.remove(pidfile)
 
 try:
-    os.popen("systemctl restart webpy")  # Web.py seems to hang periodically, so to bandaid this situation, we restart web.py twice an hour
-except:
+    # Web.py seems to hang periodically, so to bandaid this situation, we restart web.py twice an hour
+    os.popen("systemctl restart webpy")
+except Exception as error:
+    if os.getenv("DEBUG"):
+        print(f"Failed to restart webpy service! {error}")
     pass
+
 
