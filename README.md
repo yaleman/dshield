@@ -5,7 +5,8 @@
 This is a set of scripts to setup a Raspberry Pi as a DShield Sensor.
 
 Current design goals and prerequisites for using the automated installation procedure:
-- use of a __dedicated__ device (Raspberry Pi, any model as [per] (https://isc.sans.edu/diary/22680/))
+
+- use of a **dedicated** device (Raspberry Pi, any model as [per](https://isc.sans.edu/diary/22680/))
 - current Raspberry Pi OS ("Lite" version will suffice)
 - easy installation / configuration (and therefore not that much configurable)
 - disposable (when something breaks (e.g. during upgrade): re-install from scratch)
@@ -19,10 +20,11 @@ If there is the need for other distros, "someone" has to check and maintain the 
 ## Installation
 
 Reference the following files for OS-specific installation instructions:
-[Raspbian](docs/install-instructions/Raspbian.md) (Recommended)
-[Ubuntu](docs/install-instructions/Ubuntu.md)
-[openSUSE](docs/install-instructions/openSUSE.md)
-[AWS](docs/install-instructions/AWS.md)
+
+- [Raspbian](docs/install-instructions/Raspbian.md) (Recommended)
+- [Ubuntu](docs/install-instructions/Ubuntu.md)
+- [openSUSE](docs/install-instructions/openSUSE.md)
+- [AWS](docs/install-instructions/AWS.md)
 
 ## Background: `install.sh`
 
@@ -46,11 +48,13 @@ This script will:
 ### Normal Updates
 
 Inside your "dshield" directory (the directory created above when you run `git clone`), run
-```
+
+```shell
 cd install/dshield
 sudo git pull
 sudo bin/install.sh --update
 ```
+
 The "--update" parameter will automatically use the existing configuration and not prompt the user for any configuration options.
 
 Configuration parameters like your API Key will be retained. To edit the configuration, edit `/etc/dshield.ini`, to configure the firewall edit `/etc/network/iptables` (note: nat table is also used).
@@ -60,6 +64,7 @@ A new feature has been introduced, especially for automatic updates. At the end 
 Please make sure to keep special port and network configuration up to date (e.g. manually configure recently added telnet / web ports in firewall config), e.g. no-log config, no-honey config, ... unfortunately this can't be done automagically as of now. If unsure delete respective lines in `/etc/dshield.ini` and re-run the installation script.
 
 Testing of update procedure is normally done (between two releases) as follows:
+
 - update on Pi 3 from the last version to current
 - install on a current clean image of raspbian lite on a Pi 3
 
@@ -76,7 +81,8 @@ The easiest, preferred and warmly recommended way: backup old installation (if y
 #### Manual
 
 The manual procedure: uninstall all below mentioned packages and then autoremove and cross fingers:
-```
+
+```shell
 sudo su -
 /etc/init.d/cowrie stop
 dpkg --remove python-crypto
@@ -96,7 +102,8 @@ apt-get dist-upgrade
 #### Automatic
 
 The "automatic" **brutal** procedure (chances to break your system are **VERY** high, but hey, it's a disposable honeypot anyway ...): backup (if needed), uninstall all Python distro packages (and hope that's it):
-```
+
+```shell
 sudo su -
 /etc/init.d/cowrie stop
 for PKG in `dpkg --list | grep python- | cut -d " " -f 3 | grep "^python"` ; do echo "uninstalling ${PKG}"; dpkg --force-depends --purge ${PKG}; done
@@ -113,19 +120,21 @@ apt-get dist-upgrade
 ### How to place the DShield sensor / honeypot
 
 This DShield sensor and honeypot is meant to only analyze Internet related traffic, i.e. traffic which is issued from public IP addresses:
+
 - this is due to how the DShield project works (collection of information about the current state of the Internet)
 - only in this way information which is interesting for the Internet security community can be gathered
 - only in this way it can be ensured that no internal, non-public information is leaked from your Pi to DShield
 
 So you must place the Pi on a network where it can be exposed to the Internet (and won't be connected to from the inner networks, except for administrative tasks). For a maximum sensor benefit it is desirable that the Pi is exposed to the whole traffic the Internet routes to a public IP (and not only selected ports).
 
-For SoHo users there is normally an option in the DSL or cable router to direct all traffic from the public IP the router is using (i.e. has been assigned by the ISP) to an internal IP. This has to be the Pi. This feature is named e.g. "exposed host", "DMZ" (here you may have to enable further configuration to ensure ___all___ traffic is being routed to the Pi's internal IP address and not only e.g. port 80).
+For SoHo users there is normally an option in the DSL or cable router to direct all traffic from the public IP the router is using (i.e. has been assigned by the ISP) to an internal IP. This has to be the Pi. This feature is named e.g. "exposed host", "DMZ" (here you may have to enable further configuration to ensure **all** traffic is being routed to the Pi's internal IP address and not only e.g. port 80).
 
 For enterprises a protected DMZ would be a suitable place (protected: if the sensor / honeypot is hacked this incident is contained and doesn't affect other hosts in the DMZ). Please be aware that - if using static IPs - you're exposing attacks / scans to your IP to the DShield project and the community which can be tracked via whois to your company.
 
 To test your set up you may use a public port scanner and point it to the router's public IP (which is then internally forwarded to the Pi). This port scan should be directly visible in `/var/log/dshield.log` and later in your online report accessible via your DShield account. Use only for quick and limited testing purposes, please, so that DShield data isn't falsified.
 
 ### Navigating in Forms
+
 - RETURN: submit the form (OK)
 - ESC: exit the form (Cancel)
 - cursor up / down: navigate through form / between input fields
@@ -149,25 +158,25 @@ To test your set up you may use a public port scanner and point it to the router
 - see comments in install.sh
 - see GIT commit comments
 
-
 ## DEV Instance - web.py and sitecopy.py
 
 sitecopy.py will copy any site serve up the site in using the web.py script just use:
 
-```
+```shell
 python sitecopy.py http://www.yoursite.com
 ```
 
 - It will not change the links at this time - to do
 - Any data posted or user request strings will be logged to DB\webserver.sqlite
 
-web.py - do not need to run sitecopy however it will serve up a very basic page that can accept input and files. 
-Todo:
+web.py - do not need to run sitecopy however it will serve up a very basic page that can accept input and files.
+
+## TODO
+
 - Need to figure out how to serve up vulnerable pages - probably from the path
 - SQL Injection - will likely use separate dorked database
 - Would like to integrate with cowrie for shell attacks - (BHAG)
 
 Any input appreciated - Please file a bug report / issue via github - thanks!
 
-Slack group invite link: https://www.dshield.org/slack/
-
+Slack group invite link: <https://www.dshield.org/slack/>
