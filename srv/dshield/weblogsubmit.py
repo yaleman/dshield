@@ -125,4 +125,5 @@ except Exception as error:
         print(f"Failed to restart webpy service! {error}")
     pass
 
-
+if os.getenv("DEBUG"):
+    print(f"Completed successfully. {linecount} lines sent.")
