@@ -9,8 +9,7 @@
 #
 ####
 
-uid=$(id -u)
-if [ ! "$uid" = "0" ]; then
+if [ "$(id -u)" -ne 0 ]; then
   echo "you have to run this script as root. eg."
   echo "  sudo cleanup.sh"
   exit
@@ -22,19 +21,19 @@ echo "  This script will delete backups and log files."
 echo "  Do you want to proceed? (Y/N)"
 echo
 while : ; do
-    read -s -p "Press Y/N key: " -n 1 k <&1
+    read -r -s -p "Press Y/N key: " -n 1 k <&1
     k=${k^}
-    echo $k
+    echo "$k"
     if [[ $k = N ]]; then
 	echo
-	echo "abort"	
+	echo "abort"
 	exit
     fi
     if [[ $k = Y ]]; then
 	echo
 	echo "removing logs and backups"
 	break
-    fi    
+    fi
 done
 fi
 rm -rf /srv/www.2*

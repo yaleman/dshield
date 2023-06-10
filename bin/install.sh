@@ -309,13 +309,13 @@ do_log() {
   fi
   chmod 1777 ${LOGDIR}
   if [ ! -f ${LOGFILE} ]; then
-    touch ${LOGFILE}
-    chmod 600 ${LOGFILE}
+    touch "${LOGFILE}"
+    chmod 600 "${LOGFILE}"
     outlog "Log ${LOGFILE} started."
     outlog "ATTENTION: the log file contains sensitive information (e.g. passwords, "
     outlog "           API keys, ...). Handle with care and sanitize before sharing."
   fi
-  echo "$(date +'%Y-%m-%d_%H%M%S') ### ${*}" >>${LOGFILE}
+  echo "$(date +'%Y-%m-%d_%H%M%S') ### ${*}" >>"${LOGFILE}"
 }
 
 # execute and log
@@ -372,15 +372,16 @@ do_copy() {
     outlog "Error copying ${1} to ${2}. Aborting."
     exit 9
   fi
-  if [ "${3}" != "" -a ! -d ${1} ]; then
+  if [ -n "${3}" ] && [ ! -d "${1}" ]; then
     # only if $1 isn't a directory!
-    if [ -f ${2} ]; then
+    if [ -f "${2}" ]; then
       # target is a file, chmod directly
       run "chmod ${3} ${2}"
     else
       # target is a directory, so use basename
-      run "chmod ${3} ${2}/$(basename ${1})"
+      run "chmod ${3} ${2}/$(basename "${1}")"
     fi
+    # shellcheck disable=SC2181
     if [ ${?} -ne 0 ]; then
       outlog "Error executing chmod ${3} ${2}/${1}. Aborting."
       exit 9
@@ -427,13 +428,13 @@ drun 'df -h'
 outlog "Checking Pre-Requisits"
 
 progname=$0
-progdir=$(dirname $0)
+progdir=$(dirname "$0")
 progdir=$PWD/$progdir
 
 dlog "progname: ${progname}"
 dlog "progdir: ${progdir}"
 
-cd $progdir
+cd "$progdir" || exit 1
 
 if [ ! -f /etc/os-release ]; then
   outlog "I can not find the /etc/os-release file. You are likely not running a supported operating system"
@@ -539,7 +540,8 @@ if [ "$ID" != "raspbian" ] && [ "$ID" != "opensuse" ] && [ "$ID" != "raspbian" ]
   outlog " - openSUSE Tumbleweed/Leap."
   outlog "It may or may not work with your distro. Feel free to test and contribute."
   outlog "Press ENTER to continue, CTRL+C to abort."
-  read lala
+  #shellcheck disable=SC2034
+  read -r lala
 fi
 
 if [ "$ID" == "opensuse" ]; then
@@ -791,7 +793,7 @@ if [ "$FAST" == "0" ]; then
   fi
 
   drun 'pip3 list --format=columns'
-  
+
 else
   outlog "Skipping PIP check in FAST mode"
 fi
@@ -857,13 +859,13 @@ if [ -f /etc/dshield.ini ]; then
     drun 'cat /etc/dshield.ini'
   fi
   # believe it or not, bash has a built in .ini parser. Just need to remove spaces around "="
-  source <(grep = /etc/dshield.ini | sed 's/ *= */=/g')
+  source <(grep '=' /etc/dshield.ini | sed 's/ *= */=/g')
   dlog "dshield.ini found, content follows"
   drun 'cat /etc/dshield.ini'
   dlog "securing dshield.ini"
   run 'chmod 600 /etc/dshield.ini'
   run 'chown root:root /etc/dshield.ini'
-  
+
 fi
 
 #
@@ -919,14 +921,13 @@ fi
 return_value=$DIALOG_OK
 return=1
 if [ "$INTERACTIVE" == 1 ]; then
-  if [ $return_value -eq $DIALOG_OK ]; then
-    if [ $return = "1" ]; then
-      dlog "use existing dhield account"
+  if [ $return = "1" ]; then
+      dlog "use existing dshield account"
       apikeyok=0
       while [ "$apikeyok" = 0 ]; do
         dlog "Asking user for dshield account information"
         exec 3>&1
-        VALUES=$(dialog --ok-label "Verify" --title "DShield Account Information" --form "Authentication Information. Copy/Past from dshield.org/myaccount.html. Use CTRL-V / SHIFT + INS to paste." 12 60 0 \
+        VALUES=$(dialog --ok-label "Verify" --title "DShield Account Information" --form "Authentication Information. Copy/Paste from dshield.org/myaccount.html. Use CTRL-V / SHIFT + INS to paste." 12 60 0 \
           "E-Mail Address:" 1 2 "$email" 1 17 35 100 \
           "       API Key:" 2 2 "$apikey" 2 17 35 100 \
           2>&1 1>&3)
@@ -942,7 +943,7 @@ if [ "$INTERACTIVE" == 1 ]; then
           dlog "Calculating nonce."
           nonce=$(openssl rand -hex 10)
           dlog "Calculating hash."
-          hash=$(echo -n $email:$apikey | openssl dgst -hmac $nonce -sha512 -hex | cut -f2 -d'=' | tr -d ' ')
+          hash=$(echo -n "$email:$apikey" | openssl dgst -hmac "$nonce" -sha512 -hex | cut -f2 -d'=' | tr -d ' ')
           dlog "Calculated nonce (${nonce}) and hash (${hash})."
 
           # TODO: urlencode($user)
@@ -982,12 +983,7 @@ if [ "$INTERACTIVE" == 1 ]; then
         esac
         clear
       done # while API not OK
-
     fi # use existing account or create new one
-  fi # dialogue not aborted
-
-  # echo $uid
-
   dialog --title 'API Key Verified' --msgbox 'Your API Key is valid. The firewall will be configured next. ' 7 40
 fi # interactive mode
 
@@ -1215,7 +1211,7 @@ if [ "${database}" == "" ]; then
 fi
 if [ "${archivedatabase}" == "" ]; then
     archivedatabase='none'
-fi    
+fi
 
 if [ "${nofwlogging}" == "" ]; then
   # default: local net & connected IPs (as the user confirmed)
@@ -1382,7 +1378,7 @@ if [ "$use_iptables" = "True" ] ; then
   cat >/etc/network/iptables <<EOF
 
 #
-# 
+#
 #
 
 *filter
@@ -1487,7 +1483,7 @@ EOF
   done
 
   echo "# - telnet ports" >>/etc/network/iptables
-  if [ "$telnet" != "no" ]; then   
+  if [ "$telnet" != "no" ]; then
       for PORT in ${TELNETREDIRECT}; do
 	  echo "-A PREROUTING -p tcp -m tcp --dport ${PORT} -j REDIRECT --to-ports ${TELNETHONEYPORT}" >>/etc/network/iptables
       done
@@ -1515,7 +1511,7 @@ EOF
       run "systemctl daemon-reload"
       run "systemctl enable dshieldfw.service"
   fi
-  
+
 else # use_iptables = False -> use nftables
   dlog "using nftables, not iptables"
   cat > /etc/network/ruleset.nft <<EOF
@@ -1609,7 +1605,7 @@ EOF
   done
 
   echo "# - telnet ports" >>/etc/network/ruleset.nft
-  if [ "$telnet" != "no" ]; then   
+  if [ "$telnet" != "no" ]; then
       for PORT in ${TELNETREDIRECT}; do
 	  echo "add rule ip nat PREROUTING tcp dport ${PORT} counter redirect to :${TELNETHONEYPORT}" >>/etc/network/ruleset.nft
       done
@@ -2095,6 +2091,7 @@ fi
 if [ "$ID" == "opensuse" ]; then
   dlog "uninstalling postfix if installed"
   zypper search -i --match-exact postfix
+  #shellcheck disable=SC2181
   if [ $? -eq 0 ]; then
     # postfix installed
     run 'zypper --non-interactive remove postfix'

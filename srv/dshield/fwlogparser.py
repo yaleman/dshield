@@ -7,9 +7,9 @@ from sys import argv
 import os
 import re
 import json
-import syslog
+# import syslog
 from time import strptime
-from time import mktime
+# from time import mktime
 from time import time
 from datetime import datetime
 from DShield import DshieldSubmit
@@ -27,7 +27,7 @@ def parse(logline,logformat,linere):
             fwdata=m.group(2)
         elif logformat == 'aws':
             logdata['time'] = int(m.group(1))
-            fwdata=m.group(2)            
+            fwdata=m.group(2)
         elif logformat == 'generic':
             month = strptime(m.group(1), '%b').tm_mon
             if month == 12 and now.month == 1:
@@ -45,7 +45,7 @@ def parse(logline,logformat,linere):
 
         else:
             d.log("Bad format specified: {}".format(logformat))
-            
+
         if logdata['time'] > startdate:
             parts = fwdata.split()
             logdata['flags'] = ''
@@ -133,8 +133,8 @@ except:
 pidfile = piddir+"fwparser.pid"
 lastcount = lastdir+"lastfwlog"
 skipvalue = lastdir+"skipvalue"
-    
-if not os.path.exists(logfile) or os.path.isfile(logfile) is in [False, None]:
+
+if not os.path.exists(logfile) or os.path.isfile(logfile) in [False, None]:
     sys.exit('Can not find logfile %s ' % logfile)
 if os.path.exists(pidfile) and os.path.isfile(pidfile):
     checklock(pidfile)
@@ -146,7 +146,7 @@ f.close()
 
 if os.path.exists(lastcount) and os.path.isfile(lastcount):
     f = open(lastcount, 'r')
-    try: 
+    try:
         startdate = float(f.readline())
     except:
         d.log("New Startdate")
@@ -160,7 +160,7 @@ d.log("Current Time %s" % (currenttime))
 if ( startdate<currenttime-86400):
     startdate=currenttime-86400;
     d.log("Correcting Startdate to %d" % (startdate) )
-    
+
 
 if os.path.isfile(skipvalue):
     f = open(skipvalue, 'r')
@@ -172,8 +172,8 @@ if os.path.isfile(skipvalue):
 if skip<1:
     skip=1
 if debug > 0:
-    d.log("Skip value is %d file %s" % (skip,skipvalue))    
-    
+    d.log("Skip value is %d file %s" % (skip,skipvalue))
+
 logs = []
 i = 0
 j = 0
@@ -220,7 +220,7 @@ else:
 d.log("new skip value is %d" % (skip))
 f = open(skipvalue, 'w')
 f.write(str(skip))
-f.close()    
+f.close()
 logobject = {'type': 'firewall', 'logs': logs}
 if debug == 0:
     if j>0:
