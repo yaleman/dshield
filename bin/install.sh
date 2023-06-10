@@ -304,11 +304,11 @@ quotespace() {
 
 # write log
 do_log() {
-  if [ ! -d ${LOGDIR} ]; then
-    mkdir -p ${LOGDIR}
+  if [ ! -d "${LOGDIR}" ]; then
+    mkdir -p "${LOGDIR}"
   fi
-  chmod 1777 ${LOGDIR}
-  if [ ! -f ${LOGFILE} ]; then
+  chmod 1777 "${LOGDIR}"
+  if [ ! -f "${LOGFILE}" ]; then
     touch "${LOGFILE}"
     chmod 600 "${LOGFILE}"
     outlog "Log ${LOGFILE} started."
