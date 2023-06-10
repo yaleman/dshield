@@ -430,7 +430,7 @@ outlog "Checking Pre-Requisits"
 
 progname=$0
 progdir=$(dirname "$0")
-progdir="$(pwd)/$progdir"
+# progdir="$(PWD)/$progdir"
 
 dlog "progname: ${progname}"
 dlog "progdir: ${progdir}"
