@@ -951,8 +951,8 @@ if [ "$INTERACTIVE" == 1 ]; then
 
         case $response in
         ${DIALOG_OK})
-          email=$(echo $VALUES | cut -f1 -d' ')
-          apikey=$(echo $VALUES | cut -f2 -d' ')
+          email=$(echo "$VALUES" | cut -f1 -d' ')
+          apikey=$(echo "$VALUES" | cut -f2 -d' ')
           dlog "Got email ${email} and apikey ${apikey}"
           dlog "Calculating nonce."
           nonce=$(openssl rand -hex 10)
@@ -963,6 +963,7 @@ if [ "$INTERACTIVE" == 1 ]; then
           # TODO: urlencode($user)
           user=$(echo $email | sed 's/+/%2b/' | sed 's/@/%40/')
           dlog "Checking API key ..."
+          #shellcheck disable=SC2016
           run 'curl -s https://isc.sans.edu/api/checkapikey/$user/$nonce/$hash/$myversion/$piid > $TMPDIR/checkapi'
 
           dlog "Curl return code is ${?}"
@@ -977,9 +978,9 @@ if [ "$INTERACTIVE" == 1 ]; then
 
           dlog "Examining result of API key check ..."
 
-          if grep -q '<result>ok</result>' $TMPDIR/checkapi; then
+          if grep -q '<result>ok</result>' "$TMPDIR/checkapi"; then
             apikeyok=1
-            uid=$(grep '<id>.*<\/id>' $TMPDIR/checkapi | sed -E 's/.*<id>([0-9]+)<\/id>.*/\1/')
+            uid=$(grep '<id>.*<\/id>' "$TMPDIR/checkapi "| sed -E 's/.*<id>([0-9]+)<\/id>.*/\1/')
             dlog "API key OK, uid is ${uid}"
           else
             dlog "API key not OK, informing user"
