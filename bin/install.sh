@@ -598,15 +598,16 @@ if [ "$FAST" == "0" ]; then
     # 2020-08-03: Added python install outside the loop for Ubuntu 18 vs 20
     #             these two installs may fail depending on ubuntu flavor
     # 2020-09-21: remove python2
-    run 'apt -y -q remove python2'
-    run 'apt -y -q remove python'
-    run 'apt -y -q remove python-pip'
-    run 'apt -y -q install python3'
-    run 'apt -y -q install python3-pip'
-    run 'apt -y -q install python3-requests'
-    run 'apt -y -q remove python-requests'
+    run 'apt -y -q remove python2' || echo ""
+    run 'apt -y -q remove python' || echo ""
+    run 'apt -y -q remove python-pip' || echo ""
+    run 'apt -y -q install python3' || echo ""
+    run 'apt -y -q install python3-pip' || echo ""
+    run 'apt -y -q install python3-requests' || echo ""
+    run 'apt -y -q remove python-requests' || echo ""
 
     for b in authbind build-essential curl dialog gcc git jq libffi-dev libmariadb-dev-compat libmpc-dev libmpfr-dev libpython3-dev libssl-dev libswitch-perl libwww-perl net-tools python3-dev python3-minimal python3-requests python3-urllib3 python3-virtualenv rng-tools sqlite3 unzip wamerican zip libsnappy-dev virtualenv lsof iptables rsyslog; do
+      echo "installing $b"
       run "apt -y -q install $b"
       if ! dpkg -l $b >/dev/null 2>/dev/null; then
         outlog "ERROR I was unable to install the $b package via apt"
