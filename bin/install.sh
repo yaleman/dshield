@@ -426,7 +426,7 @@ fi
 
 drun env
 drun 'df -h'
-outlog "Checking Pre-Requisits"
+outlog "Checking Pre-Requisites"
 
 progname=$0
 progdir=$(dirname "$0")
@@ -434,6 +434,7 @@ progdir=$(dirname "$0")
 
 dlog "progname: ${progname}"
 dlog "progdir: ${progdir}"
+echo "progdir: ${progdir}"
 
 cd "$progdir" || exit 1
 
