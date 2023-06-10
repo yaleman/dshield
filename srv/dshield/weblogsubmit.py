@@ -16,26 +16,27 @@ ipaddr = os.popen('/bin/hostname -I').read().replace(" \n", "")
 
 pidfile = "/var/run/weblogparser.pid"
 d = DshieldSubmit('')
-if os.path.isfile(pidfile):
+if os.path.exists(pidfile) and os.path.isfile(pidfile):
     if d.check_pid(pidfile):
         sys.exit('PID file found. Am I already running?')
     else:
         print("stale lock file.")
         os.remove(pidfile)
 
-
 f = open(pidfile, 'w')
 f.write(str(os.getpid()))
 f.close()
 
 config = '..' + os.path.sep + 'www'+os.path.sep+'DB' + os.path.sep + 'webserver.sqlite'
+if os.getenv("DEBUG"):
+    print("config file: " + config)
 try :
     conn = sqlite3.connect(config)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS submissions
             (
               timestamp integer primary key,
-              linessent integer 
+              linessent integer
             )
           ''')
     c.execute('''CREATE TABLE IF NOT EXISTS requests
