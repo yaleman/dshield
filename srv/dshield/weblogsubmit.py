@@ -4,6 +4,7 @@
 # version 2019-11-17-01
 
 import os
+from pathlib import Path
 import sys
 import sqlite3
 from DShield import DshieldSubmit
@@ -27,11 +28,15 @@ f = open(pidfile, 'w')
 f.write(str(os.getpid()))
 f.close()
 
-config = '..' + os.path.sep + 'www'+os.path.sep+'DB' + os.path.sep + 'webserver.sqlite'
+config = Path(os.path.join("..", "www", "DB", "webserver.sqlite"))
+if not config.parent.exists():
+    print(f"Failed to find DB dir: {config.parent}")
+    sys.exit(1)
+# config = '..' + os.path.sep + 'www'+os.path.sep+'DB' + os.path.sep + 'webserver.sqlite'
 if os.getenv("DEBUG"):
     print("database file: " + config)
 try :
-    conn = sqlite3.connect(config)
+    conn = sqlite3.connect(config.resolve())
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS submissions
             (
