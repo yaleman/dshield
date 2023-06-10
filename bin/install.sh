@@ -823,7 +823,9 @@ run 'echo "HRNGDEVICE=/dev/urandom" > /etc/default/rnd-tools'
 
 if [ "$ID" != "opensuse" ]; then
   dlog "Disabling IPv6 in /etc/modprobe.d/ipv6.conf"
-  run "mv /etc/modprobe.d/ipv6.conf /etc/modprobe.d/ipv6.conf.bak"
+  if [ -f  "/etc/modprobe.d/ipv6.conf" ]; then
+    run "mv /etc/modprobe.d/ipv6.conf /etc/modprobe.d/ipv6.conf.bak"
+  fi
   cat >/etc/modprobe.d/ipv6.conf <<EOF
 # Don't load ipv6 by default
 alias net-pf-10 off
