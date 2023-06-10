@@ -7,8 +7,8 @@ import os
 import sys
 import sqlite3
 from DShield import DshieldSubmit
-from datetime import datetime
-import json
+# from datetime import datetime
+# import json
 
 # We need to collect the local IP to scrub it from any logs being submitted for anonymity, and to reduce noise/dirty data.
 
@@ -29,7 +29,7 @@ f.close()
 
 config = '..' + os.path.sep + 'www'+os.path.sep+'DB' + os.path.sep + 'webserver.sqlite'
 if os.getenv("DEBUG"):
-    print("config file: " + config)
+    print("database file: " + config)
 try :
     conn = sqlite3.connect(config)
     c = conn.cursor()
@@ -71,7 +71,8 @@ for r in rsx:
     logdata = {}
     headerdata = {}
     logdata['time']=float(r[0])
-    for each in r[1].split('\r\n'): # Header data was stored as a string with extra characters, so some clean-up needed.
+    # Header data was stored as a string with extra characters, so some clean-up needed.
+    for each in r[1].split('\r\n'):
         if (each and ipaddr in each): # scrubbing local IP from data before submission
             try:
                 headerdata['header_'+str(each.split(': ')[0])] = each.split(': ')[1]
