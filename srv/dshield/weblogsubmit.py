@@ -17,7 +17,8 @@ pidfile = "/var/run/weblogparser.pid"
 d = DshieldSubmit('')
 if os.path.exists(pidfile) and os.path.isfile(pidfile):
     if d.check_pid(pidfile):
-        sys.exit('PID file found. Am I already running?')
+        print('PID file found. Am I already running?')
+        sys.exit()
     else:
         print("stale lock file.")
         os.remove(pidfile)
@@ -123,7 +124,6 @@ try:
 except Exception as error:
     if os.getenv("DEBUG"):
         print(f"Failed to restart webpy service! {error}")
-    pass
 
 if os.getenv("DEBUG"):
     print(f"Completed successfully. {linecount} lines sent.")
