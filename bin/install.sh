@@ -8,6 +8,7 @@
 #  5 - user cancel
 #
 ####
+set -e
 
 ###########################################################
 ## CONFIG SECTION
@@ -294,8 +295,8 @@ outlog() {
 
 quotespace() {
   local line="${*}"
-  if echo $line | egrep -q ' '; then
-    if ! echo $line | egrep -q "'"; then
+  if echo "$line" | grep -Eq ' '; then
+    if ! echo "$line" | grep -Eq "'"; then
       line="'${line}'"
     fi
   fi
@@ -323,7 +324,7 @@ do_log() {
 #    if redirects etc. are used
 run() {
   do_log "Running: ${*}"
-  eval ${*} >>${LOGFILE} 2>&1
+  eval "${*}" >> "${LOGFILE}" 2>&1
   RET=${?}
   if [ ${RET} -ne 0 ]; then
     dlog "EXIT CODE NOT ZERO (${RET})!"
@@ -429,7 +430,7 @@ outlog "Checking Pre-Requisits"
 
 progname=$0
 progdir=$(dirname "$0")
-progdir=$PWD/$progdir
+progdir="$(pwd)/$progdir"
 
 dlog "progname: ${progname}"
 dlog "progdir: ${progdir}"
@@ -557,6 +558,7 @@ dlog "TMPDIR: ${TMPDIR}"
 
 dlog "setting trap"
 # trap "rm -r $TMPDIR" 0 1 2 5 15
+#shellcheck disable=SC2016
 run 'trap "echo Log: ${LOGFILE} && rm -r $TMPDIR" 0 1 2 5 15'
 if [ "$FAST" == "0" ]; then
   outlog "Basic security checks"
@@ -564,7 +566,7 @@ if [ "$FAST" == "0" ]; then
   dlog "making sure default password was changed"
 
   if [ "$ID" == "opensuse" ]; then
-    if $progdir/passwordtest-opensuse.pl | grep -q 1; then
+    if "$progdir/passwordtest-opensuse.pl" | grep -q 1; then
       outlog "You have not yet changed the default password for the 'root' user"
       outlog "Change it NOW ..."
       exit 9
@@ -656,14 +658,14 @@ if [ "$INTERACTIVE" == 1 ]; then
   dialog --title '### WARNING ###' --colors --yesno "You are about to turn this system into a honeypot. This software assumes that the device is \ZbDEDICATED\Zn to this task. There is no simple uninstall (e.g. IPv6 will be disabled). If something breaks you may need to reinstall from scratch. This script will try to do some magic in installing and configuring your to-be honeypot. But in the end \Zb\Z1YOU\Zn are responsible to configure it in a safe way and make sure it is kept up to date. An orphaned or non-monitored honeypot will become insecure! Do you want to proceed?" 0 0
   response=$?
   case $response in
-  ${DIALOG_CANCEL})
+  "${DIALOG_CANCEL}")
     clear
     dlog "User clicked CANCEL on honeypot warning"
     outlog "Terminating installation by your command. The system shouldn't have been hurt too much yet ..."
     outlog "See ${LOGFILE} for details."
     exit 5
     ;;
-  ${DIALOG_ESC})
+  "${DIALOG_ESC}")
     clear
     dlog "User pressed ESC on honeypot warning"
     outlog "Terminating installation by your command. The system shouldn't have been hurt too much yet ..."
@@ -680,13 +682,13 @@ if [ "$INTERACTIVE" == 1 ]; then
   dialog --title '### PRIVACY NOTICE ###' --colors --yesno "By running this honeypot, you agree to participate in our research project. This honeypot will report firewall logs, connections to various services (e.g. ssh, telnet, web) to DShield. The honeypot will also report errors and the status of its configuration to DShield. Your ability to remove this data is limited after it has been submitted. For details, see privacy.md ." 0 0
   response=$?
   case $response in
-  ${DIALOG_CANCEL})
+  "${DIALOG_CANCEL}")
     clear
     dlog "User clicked CANCEL on privacy policy"
     outlog "Terminating installation after not accepting privacy warning."
     exit 5
     ;;
-  ${DIALOG_ESC})
+  "${DIALOG_ESC}")
     clear
     dlog "User pressed ESC on privacy policy"
     outlog "Terminating installation after not accepting privacy warning."
@@ -711,13 +713,13 @@ if [ "$INTERACTIVE" == 1 ]; then
   exec 3>&-
 
   case $response in
-  ${DIALOG_CANCEL})
+  "${DIALOG_CANCEL}")
     dlog "User clicked CANCEL."
     outlog "Terminating installation by your command. The system shouldn't have been hurt too much yet ..."
     outlog "See ${LOGFILE} for details."
     exit 5
     ;;
-  ${DIALOG_ESC})
+  "${DIALOG_ESC}")
     dlog "User pressed ESC"
     outlog "Terminating installation by your command. The system shouldn't have been hurt too much yet ..."
     outlog "See ${LOGFILE} for details."
@@ -784,7 +786,7 @@ if [ "$FAST" == "0" ]; then
     #   OR
     # - pip3 below /usr without local
     # -> potential distro pip3 found
-    if [ $(pip3 -V | cut -d " " -f 4 | cut -d "/" -f 3) != "local" -o $(find /usr -name pip3 | grep -v local | wc -l) -gt 0 ]; then
+    if [ "$(pip3 -V | cut -d " " -f 4 | cut -d "/" -f 3)" != "local" ] || [ "$(find /usr -name pip3 | grep -cv local )" -gt 0 ]; then
       # pip3 may be distro pip3
       outlog "Potential distro pip3 found"
     else
@@ -859,6 +861,7 @@ if [ -f /etc/dshield.ini ]; then
     drun 'cat /etc/dshield.ini'
   fi
   # believe it or not, bash has a built in .ini parser. Just need to remove spaces around "="
+  #shellcheck disable=SC1090
   source <(grep '=' /etc/dshield.ini | sed 's/ *= */=/g')
   dlog "dshield.ini found, content follows"
   drun 'cat /etc/dshield.ini'
@@ -872,7 +875,7 @@ fi
 # defaulting to enable telnet
 #
 
-if [ "$telnet" == "" ]; then
+if [ -z "$telnet" ]; then
     telnet="true"
 fi
 if [ "$telnet" == "no" ]; then
@@ -1902,7 +1905,10 @@ outlog "Installing Python packages with PIP. This will take a LOOONG time."
 OLDDIR=$(pwd)
 
 
-cd ${COWRIEDIR}
+cd ${COWRIEDIR} || {
+  echo "Couldn't cd to ${COWRIEDIR}"
+  exit 1
+}
 dlog "installing global dependencies from ${SCRIPTDIR}/requirements.txt"
 run 'pip3 install --upgrade pip'
 run "pip3 install -r ${SCRIPTDIR}/requirements.txt"
@@ -1947,16 +1953,22 @@ dlog "copying cowrie.cfg and adding entries"
 # adjust cowrie.cfg
 export uid
 export apikey
-export hostname=$(shuf /usr/share/dict/american-english | head -1 | sed 's/[^a-z]//g')
-export sensor_name=dshield-$uid-$version
+hostname=$(shuf /usr/share/dict/american-english | head -1 | sed 's/[^a-z]//g')
+export hostname
+export sensor_name="dshield-$uid-$myversion"
 fake1=$(shuf -i 1-255 -n 1)
 fake2=$(shuf -i 1-255 -n 1)
 fake3=$(shuf -i 1-255 -n 1)
-export fake_addr=$(printf "10.%d.%d.%d" $fake1 $fake2 $fake3)
-export arch=$(arch)
-export kernel_version=$(uname -r)
-export kernel_build_string=$(uname -v | sed 's/SMP.*/SMP/')
-export ssh_version=$(ssh -V 2>&1 | cut -f1 -d',')
+fake_addr=$(printf "10.%d.%d.%d" "$fake1" "$fake2" "$fake3")
+export fake_addr
+arch=$(arch)
+export arch
+kernel_version=$(uname -r)
+export kernel_version
+kernel_build_string=$(uname -v | sed 's/SMP.*/SMP/')
+export kernel_build_string
+ssh_version=$(ssh -V 2>&1 | cut -f1 -d',')
+export ssh_version
 export ttylog='false'
 export telnet
 drun "cat ..${COWRIEDIR}/cowrie.cfg | envsubst > ${COWRIEDIR}/cowrie.cfg"
@@ -1975,6 +1987,7 @@ run "lscpu > ${TXTCMDS}/usr/bin/lscpu"
 run "echo '-bash: emacs: command not found' > ${TXTCMDS}/usr/bin/emacs"
 run "echo '-bash: locate: command not found' > ${TXTCMDS}/usr/bin/locate"
 
+#shellcheck disable=SC2016
 run 'chown -R cowrie:cowrie ${COWRIEDIR}'
 
 # echo "###########  $progdir  ###########"
@@ -1986,18 +1999,24 @@ if [ "$ID" != "opensuse" ]; then
 else # openSUSE
   systemdpref="/usr"
 fi
-do_copy $progdir/../lib/systemd/system/cowrie.service ${systemdpref}/lib/systemd/system/cowrie.service 644
-do_copy $progdir/../etc/cron.hourly/cowrie /etc/cron.hourly 755
+do_copy "$progdir/../lib/systemd/system/cowrie.service" "${systemdpref}/lib/systemd/system/cowrie.service" 644
+do_copy "$progdir/../etc/cron.hourly/cowrie /etc/cron.hourly" 755
 
 # make sure to remove old cowrie start if they exist
 if [ -f /etc/init.d/cowrie ]; then
   rm -f /etc/init.d/cowrie
 fi
+#shellcheck disable=SC2016
 run 'mkdir -p ${COWRIEDIR}/log'
+#shellcheck disable=SC2016
 run 'chmod 755 ${COWRIEDIR}/log'
+#shellcheck disable=SC2016
 run 'chown cowrie:cowrie ${COWRIEDIR}/log'
+#shellcheck disable=SC2016
 run 'mkdir -p ${COWRIEDIR}/log/tty'
+#shellcheck disable=SC2016
 run 'chmod 755 ${COWRIEDIR}/log/tty'
+#shellcheck disable=SC2016
 run 'chown cowrie:cowrie ${COWRIEDIR}/log/tty'
 find /etc/rc?.d -name '*cowrie*' -delete
 run 'systemctl daemon-reload'
@@ -2018,13 +2037,13 @@ dlog "installing ISC-Agent"
 dlog "(re)installing python attrs package"
 run "pip3 install --ignore-installed attrs"
 run "mkdir -p ${ISC_AGENT_DIR}"
-do_copy $progdir/../srv/isc-agent ${ISC_AGENT_DIR}/../
-do_copy $progdir/../lib/systemd/system/isc-agent.service ${systemdpref}/lib/systemd/system/ 644
+do_copy "$progdir/../srv/isc-agent ${ISC_AGENT_DIR}/../"
+do_copy "$progdir/../lib/systemd/system/isc-agent.service" "${systemdpref}/lib/systemd/system/" 644
 run "chmod +x /srv/isc-agent/bin/isc-agent"
 run "mkdir -m 0700 /srv/isc-agent/run"
 
 OLDPWD=$PWD
-cd ${ISC_AGENT_DIR}
+cd "${ISC_AGENT_DIR}" || exit 1
 run "pip3 install --upgrade pip"
 ISCAGENTENV="/srv/isc-agent/virtenv"
 run "virtualenv --python=python3 $ISCAGENTENV"
@@ -2035,7 +2054,7 @@ dlog 'deactivate isc-agent venv'
 run 'deactivate'
 
 [ "$ID" != "opensuse" ] && run "systemctl enable systemd-networkd.service systemd-networkd-wait-online.service"
-cd $OLDPWD
+cd "$OLDPWD" || exit 1
 
 ###########################################################
 ## Copying further system files
@@ -2111,7 +2130,7 @@ fi
 
 dlog "installing /etc/motd"
 if [ "$ID" != "opensuse" ]; then
-  cat >$TMPDIR/motd <<EOF
+  cat >"$TMPDIR/motd" <<EOF
 
 The programs included with the Debian GNU/Linux system are free software;
 the exact distribution terms for each program are described in the
@@ -2127,7 +2146,7 @@ permitted by applicable law.
 EOF
 else # openSUSE
   hostname="$(cat /etc/hostname)"
-  cat >$TMPDIR/motd <<EOF
+  cat >"$TMPDIR/motd" <<EOF
 
 The programs included with the openSUSE GNU/Linux system are free software;
 the exact distribution terms for each program are described in the
@@ -2166,13 +2185,13 @@ if [ ! -f ../etc/CA/ca.serial ]; then
 fi
 drun "ls ../etc/CA/certs/*.crt 2>/dev/null"
 dlog "Exit code not zero is possible, is expected in first run"
-if [ $(ls ../etc/CA/certs/*.crt 2>/dev/null | wc -l) -gt 0 ]; then
+if [ "$(find ../etc/CA/certs/*.crt 2>/dev/null | wc -l)" -gt 0 ]; then
   if [ "$INTERACTIVE" == 1 ]; then
     dlog "CERTs may already be there, asking user"
     dialog --title 'Generating CERTs' --yesno "You may already have CERTs generated. Do you want me to re-generate CERTs and erase all existing ones?" 10 50
     response=$?
     case $response in
-    ${DIALOG_OK})
+    "${DIALOG_OK}")
       dlog "user said OK to generate new CERTs, so removing old CERTs"
       # cleaning up old certs
       run 'rm ../etc/CA/certs/*'
@@ -2181,11 +2200,11 @@ if [ $(ls ../etc/CA/certs/*.crt 2>/dev/null | wc -l) -gt 0 ]; then
       run 'rm ../etc/CA/index.*'
       GENCERT=1
       ;;
-    ${DIALOG_CANCEL})
+    "${DIALOG_CANCEL}")
       dlog "user said no, so no new CERTs will be created, using existing ones"
       GENCERT=0
       ;;
-    ${DIALOG_ESC})
+    "${DIALOG_ESC}")
       dlog "user pressed ESC, aborting"
       clear
       exit 5
@@ -2218,7 +2237,7 @@ fi
 run 'mkdir -p /var/tmp/dshield'
 
 # rotate dshield firewall logs
-do_copy $progdir/../etc/logrotate.d/dshield /etc/logrotate.d 644
+do_copy "$progdir/../etc/logrotate.d/dshield" /etc/logrotate.d 644
 [ "$ID" = "opensuse" ] && sed -e 's/\/usr\/lib.*$/systemctl reload rsyslog/' -i /etc/logrotate.d/dshield
 if [ -f "/etc/cron.daily/logrotate" ]; then
   run "mv /etc/cron.daily/logrotate /etc/cron.hourly"
