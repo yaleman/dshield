@@ -27,6 +27,7 @@ if [ -f ~/.dshield.ini ]; then
     inifile="$HOME/.dshield.ini"
 fi
 
+# shellcheck disable=SC2283,SC2086,SC1090
 source <(grep = $inifile)
 
 if [ "$1" == "--cron" ]; then
