@@ -430,7 +430,9 @@ outlog "Checking Pre-Requisites"
 
 progname=$0
 progdir=$(dirname "$0")
-# progdir="$(PWD)/$progdir"
+if [ "$(grep -cE '^/' <<<"$progdir")" -eq 0 ]; then
+  progdir=$(dirname "$(pwd)/$0")
+fi
 
 dlog "progname: ${progname}"
 dlog "progdir: ${progdir}"
