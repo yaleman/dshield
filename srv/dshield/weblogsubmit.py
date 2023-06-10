@@ -55,7 +55,7 @@ try :
 
     maxid = c.execute("""SELECT max(timestamp) from submissions""").fetchone()
 except sqlite3.Error as e:
-    print("Error using db at %s - %s" % config, e)
+    print("Error using db at %s - %s" % (config, e))
     os.remove(pidfile)
     sys.exit(1)
 
