@@ -941,7 +941,7 @@ if [ "$INTERACTIVE" == 1 ]; then
       while [ "$apikeyok" = 0 ]; do
         dlog "Asking user for dshield account information"
         exec 3>&1
-        VALUES=$(dialog --ok-label "Verify" --title "DShield Account Information" --form "Authentication Information. Copy/Paste from dshield.org/myaccount.html. Use CTRL-V / SHIFT + INS to paste." 12 60 0 \
+        VALUES=$(dialog --ok-label "Verify" --title "DShield Account Information" --form "Authentication Information. Copy/Paste from dshield.org/myaccount.html. Use CTRL-V / SHIFT + INS to paste. Arrow keys to move fields." 12 60 0 \
           "E-Mail Address:" 1 2 "$email" 1 17 35 100 \
           "       API Key:" 2 2 "$apikey" 2 17 35 100 \
           2>&1 1>&3)
@@ -961,7 +961,7 @@ if [ "$INTERACTIVE" == 1 ]; then
           dlog "Calculated nonce (${nonce}) and hash (${hash})."
 
           # TODO: urlencode($user)
-          user=$(echo $email | sed 's/+/%2b/' | sed 's/@/%40/')
+          user=$(echo "$email" | sed 's/+/%2b/' | sed 's/@/%40/')
           dlog "Checking API key ..."
           #shellcheck disable=SC2016
           run 'curl -s https://isc.sans.edu/api/checkapikey/$user/$nonce/$hash/$myversion/$piid > $TMPDIR/checkapi'
