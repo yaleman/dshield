@@ -1,3 +1,4 @@
+annotated-types
 appdirs
 attrs
 automat
@@ -26,11 +27,11 @@ priority
 pyasn1-modules
 pyasn1
 pycparser
+pydantic-core
 pydantic[dotenv,email]
 pyhamcrest
 pyopenssl
 pyserial
-python-dotenv
 requests
 service-identity
 setuptools
